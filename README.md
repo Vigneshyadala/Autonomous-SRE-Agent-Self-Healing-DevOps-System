@@ -25,15 +25,17 @@
 </tr>
 </table>
 
-![Status](https://img.shields.io/badge/status-live%20demo-2dd4bf?style=flat-square)
-![Python](https://img.shields.io/badge/python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
-![LangChain](https://img.shields.io/badge/LangChain-0.2.16-1C3C3C?style=flat-square)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-RAG-ff3b5c?style=flat-square)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-ffb088?style=flat-square)
+![Status](https://img.shields.io/badge/STATUS-LIVE%20DEMO-2dd4bf?style=for-the-badge&labelColor=1a1024)
+![Python](https://img.shields.io/badge/PYTHON-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=1a1024)
+![LangChain](https://img.shields.io/badge/LANGCHAIN-0.2.16-1C3C3C?style=for-the-badge&labelColor=1a1024)
+![ChromaDB](https://img.shields.io/badge/CHROMADB-RAG-ff3b5c?style=for-the-badge&labelColor=1a1024)
+![Docker](https://img.shields.io/badge/DOCKER-COMPOSE-2496ED?style=for-the-badge&logo=docker&logoColor=white&labelColor=1a1024)
+![FastAPI](https://img.shields.io/badge/FASTAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=1a1024)
+![License](https://img.shields.io/badge/LICENSE-MIT-ffb088?style=for-the-badge&labelColor=1a1024)
 
-[**🚀 Live Interactive Demo**](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/) · [Portfolio](https://vigneshyadala.github.io/portfolio) · [GitHub](https://github.com/Vigneshyadala)
+[![🚀 LIVE DEMO](https://img.shields.io/badge/🚀_LIVE_DEMO-SRE--AGENT-2dd4bf?style=for-the-badge&labelColor=1a1024)](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/)
+[![GITHUB](https://img.shields.io/badge/GITHUB-VIGNESHYADALA-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Vigneshyadala)
+[![PORTFOLIO](https://img.shields.io/badge/PORTFOLIO-VIEW-ffb088?style=for-the-badge&labelColor=1a1024)](https://vigneshyadala.github.io/portfolio)
 
 </div>
 
@@ -216,7 +218,7 @@ Autonomous-SRE-Agent-Self-Healing-DevOps-System/
 
 ## 📸 Live Demo
 
-🌐 **Try it live →** [Autonomous SRE Agent demo](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/)
+[![🚀 TRY IT LIVE](https://img.shields.io/badge/🚀_TRY_IT_LIVE-AUTONOMOUS--SRE--AGENT-2dd4bf?style=for-the-badge&labelColor=1a1024)](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/)
 
 The demo page includes a **Verified Real Test Run** card — real timestamps,
 real captured logs, real agent remediation — plus an interactive simulation
