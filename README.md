@@ -1,3 +1,9 @@
+<div align="center">
+
+<table>
+<tr>
+<td valign="middle">
+
 ```
    ___        __                                              _____ ____  _____
   / _ \      / /_____  ____  ____  ____ ___  ____  __  _______/ ___// __ \/ ___/
@@ -9,6 +15,16 @@
 # 🤖 Autonomous SRE Agent
 ### Self-healing infrastructure. No human in the loop.
 
+</td>
+<td valign="middle" width="40">&nbsp;&nbsp;&nbsp;</td>
+<td valign="middle">
+
+<img src="./assets/vy-brand-lockup.svg" alt="Engineered end-to-end by Vignesh Yadala" width="280"/>
+
+</td>
+</tr>
+</table>
+
 ![Status](https://img.shields.io/badge/status-live%20demo-2dd4bf?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-0.2.16-1C3C3C?style=flat-square)
@@ -17,9 +33,9 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-ffb088?style=flat-square)
 
-**Developed & Engineered by Vignesh Yadala — © 2026**
+[**🚀 Live Interactive Demo**](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/) · [Portfolio](https://vigneshyadala.github.io/portfolio) · [GitHub](https://github.com/Vigneshyadala)
 
-[Live Interactive Demo](#) · [Portfolio](https://vigneshyadala.github.io/portfolio) · [GitHub](https://github.com/Vigneshyadala)
+</div>
 
 ---
 
@@ -115,8 +131,8 @@ interactive simulation you can replay yourself.
 
 **1️⃣ Clone the repo**
 ```bash
-git clone https://github.com/Vigneshyadala/sre-agent.git
-cd sre-agent
+git clone https://github.com/Vigneshyadala/Autonomous-SRE-Agent-Self-Healing-DevOps-System.git
+cd Autonomous-SRE-Agent-Self-Healing-DevOps-System
 ```
 
 **2️⃣ Configure your LLM credentials**
@@ -173,8 +189,8 @@ This is what makes the "autonomous" part safe enough to demo live.
 ## 📁 Repository Structure
 
 ```
-sre-agent/
-├── target-app/           # Node.js Express app + chaos endpoints
+Autonomous-SRE-Agent-Self-Healing-DevOps-System/
+├── target-app/            # Node.js Express app + chaos endpoints
 │   ├── app.js
 │   ├── Dockerfile
 │   └── package.json
@@ -189,6 +205,9 @@ sre-agent/
 │   ├── monitor.py
 │   ├── requirements.txt
 │   └── Dockerfile
+├── assets/                # Brand assets (logo, wordmark)
+│   ├── vy-brand-lockup.svg
+│   └── vy-brand-stacked.svg
 ├── index.html             # Live interactive demo + verified real incident
 └── docker-compose.yml
 ```
@@ -197,7 +216,7 @@ sre-agent/
 
 ## 📸 Live Demo
 
-🌐 **Try it live →** [sre-agent demo](#)
+🌐 **Try it live →** [Autonomous SRE Agent demo](https://vigneshyadala.github.io/Autonomous-SRE-Agent-Self-Healing-DevOps-System/)
 
 The demo page includes a **Verified Real Test Run** card — real timestamps,
 real captured logs, real agent remediation — plus an interactive simulation
@@ -207,6 +226,10 @@ you can trigger yourself.
 
 ## 👨‍💻 Developer
 
+<div align="center">
+
+<img src="./assets/vy-brand-stacked.svg" alt="Engineered end-to-end by Vignesh Yadala" width="320"/>
+
 | Name | Role | GitHub |
 |---|---|---|
 | Vignesh Yadala | Designer & Developer | [@Vigneshyadala](https://github.com/Vigneshyadala) |
@@ -214,3 +237,5 @@ you can trigger yourself.
 🤖 **Autonomous SRE Agent** — All Rights Reserved © Vignesh Yadala 2026
 
 Built with LangChain, ChromaDB, FastAPI & Docker
+
+</div>
