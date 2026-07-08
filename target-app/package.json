@@ -1,0 +1,17 @@
+{
+  "name": "sre-agent-target-app",
+  "version": "1.0.0",
+  "description": "Target Node.js application with intentional chaos endpoints for the Autonomous SRE Agent: Self-Healing DevOps System",
+  "author": "Vignesh Yadala (https://vigneshyadala.github.io/portfolio)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "start:debug": "node --expose-gc app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

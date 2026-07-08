@@ -1,0 +1,73 @@
+[
+  {
+    "id": "RB-001",
+    "title": "Database Connection Refused / ECONNREFUSED",
+    "error_pattern": "DatabaseConnectionError: connect ECONNREFUSED",
+    "description": "The application's database connection pool has lost its link to the backing datastore. This is typically caused by a stale connection pool, a transient network partition, or the database process itself being temporarily unreachable. Symptoms include repeated 500 errors from any endpoint that touches persistence, while the process itself remains alive and /health may still respond.",
+    "severity": "HIGH",
+    "tags": ["database", "connection-pool", "5xx", "econnrefused"],
+    "diagnostic_steps": [
+      "Check container logs for repeated 'ECONNREFUSED' or 'connection pool lost' entries",
+      "Confirm the target container is still running (docker ps) rather than crashed",
+      "Verify no recent DB credential or network configuration change occurred"
+    ],
+    "remediation_steps": [
+      "docker logs --tail 50 <container_name>",
+      "docker restart <container_name>",
+      "curl -sf http://localhost:<port>/health || echo 'health check still failing'",
+      "curl -sf http://localhost:<port>/data"
+    ],
+    "rollback_steps": [
+      "docker stop <container_name>",
+      "docker start <container_name>"
+    ],
+    "expected_outcome": "After restart, the in-memory connection pool re-initializes and /data returns 200 OK instead of 500 Database Connection Refused."
+  },
+  {
+    "id": "RB-002",
+    "title": "JavaScript Heap Out of Memory (Memory Leak)",
+    "error_pattern": "FATAL ERROR: JavaScript heap out of memory",
+    "description": "The Node.js process is retaining references to objects that should have been garbage collected, causing heap usage to climb continuously until V8 hits its memory ceiling. This manifests as slow responses, then request timeouts (502/504 at the reverse proxy or monitor level), and eventually a process crash or unresponsive event loop.",
+    "severity": "CRITICAL",
+    "tags": ["memory-leak", "heap", "oom", "timeout", "504"],
+    "diagnostic_steps": [
+      "docker stats <container_name> --no-stream to confirm memory usage trend",
+      "docker logs --tail 30 <container_name> to look for 'heap out of memory' or climbing heapUsedMB values",
+      "Check /health response body for heapUsedMB approaching heapTotalMB"
+    ],
+    "remediation_steps": [
+      "docker stats --no-stream <container_name>",
+      "docker exec <container_name> node -e \"console.log(process.memoryUsage())\"",
+      "docker restart <container_name>",
+      "sleep 5",
+      "curl -sf http://localhost:<port>/health"
+    ],
+    "rollback_steps": [
+      "docker-compose restart <service_name>"
+    ],
+    "expected_outcome": "Restarting the container clears all leaked heap allocations, returning heapUsedMB to baseline and restoring 200 OK on /health within one health-check cycle."
+  },
+  {
+    "id": "RB-003",
+    "title": "CPU Spike / Event Loop Blocked",
+    "error_pattern": "CPU spike simulation|event loop blocked|request timeout",
+    "description": "A synchronous, CPU-bound operation (e.g. an unbounded loop, unoptimized regex, or blocking computation) is monopolizing the single Node.js event loop thread. While this runs, the process cannot service any other incoming request, so the monitor observes timeouts across all endpoints even though the container itself is healthy and not out of memory.",
+    "severity": "MEDIUM",
+    "tags": ["cpu", "event-loop", "timeout", "performance"],
+    "diagnostic_steps": [
+      "docker stats <container_name> --no-stream and confirm CPU% is pegged near 100% of a single core",
+      "docker logs --tail 30 <container_name> for a 'CPU spike simulation starting' or similar synchronous-workload log line",
+      "Confirm memory usage is normal (rules out RB-002) to isolate this as a pure CPU issue"
+    ],
+    "remediation_steps": [
+      "docker stats --no-stream <container_name>",
+      "docker exec <container_name> node -e \"console.log(process.cpuUsage())\"",
+      "docker restart <container_name>",
+      "curl -sf http://localhost:<port>/health"
+    ],
+    "rollback_steps": [
+      "docker restart <container_name>"
+    ],
+    "expected_outcome": "Restart terminates the blocking synchronous operation immediately. Health checks should return to 200 OK on the very next polling interval since no state was corrupted, only the event loop was busy."
+  }
+]

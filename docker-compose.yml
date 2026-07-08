@@ -1,0 +1,75 @@
+# =============================================================================
+# Autonomous SRE Agent: Self-Healing DevOps System
+# Built by Vignesh Yadala
+# -----------------------------------------------------------------------------
+# Orchestrates the full end-to-end demo:
+#   target-app     -> the app-under-test with chaos endpoints
+#   agent-brain     -> LangChain + ChromaDB RAG agent, exposed over HTTP
+#   monitor         -> polls target-app and triggers agent-brain on failure
+#
+# Both agent-brain and monitor mount the host's Docker socket so they can
+# issue real `docker logs` / `docker restart` commands against target-app,
+# which is why this whole stack must be run with the host's Docker engine
+# available (Docker Desktop, or native Docker on Linux).
+# =============================================================================
+
+services:
+  target-app:
+    build:
+      context: ./target-app
+    container_name: sre-target-app
+    ports:
+      - "3500:3000"
+    networks:
+      - sre-net
+    restart: unless-stopped
+
+  agent-brain:
+    build:
+      context: ./agent-system
+    container_name: sre-agent-brain
+    env_file:
+      - ./agent-system/.env
+    environment:
+      TARGET_CONTAINER: sre-target-app
+      TARGET_APP_URL: http://target-app:3000
+      CHROMA_PERSIST_DIR: /app/chroma_store
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - chroma-data:/app/chroma_store
+    ports:
+      - "8001:8001"
+    networks:
+      - sre-net
+    depends_on:
+      - target-app
+    restart: unless-stopped
+
+  monitor:
+    build:
+      context: ./monitor-webhook
+    container_name: sre-monitor
+    environment:
+      TARGET_APP_URL: http://target-app:3000
+      TARGET_CONTAINER: sre-target-app
+      AGENT_SERVICE_URL: http://agent-brain:8001
+      POLL_INTERVAL_SECONDS: "10"
+      HEALTH_TIMEOUT_SECONDS: "5"
+      LOG_TAIL_LINES: "30"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    networks:
+      - sre-net
+    depends_on:
+      - target-app
+      - agent-brain
+    restart: unless-stopped
+
+networks:
+  sre-net:
+    driver: bridge
+
+volumes:
+  chroma-data:

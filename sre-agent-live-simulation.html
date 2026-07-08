@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SRE-Agent — Autonomous Self-Healing DevOps System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #160a0e;
+    --bg-deep: #0f0609;
+    --surface: #2a1620;
+    --surface-2: #341b27;
+    --surface-glass: rgba(42, 22, 32, 0.55);
+    --border: rgba(255, 178, 150, 0.12);
+    --border-bright: rgba(255, 59, 92, 0.35);
+    --crimson: #ff3b5c;
+    --crimson-bright: #ff5c79;
+    --crimson-dim: #c4203d;
+    --rose-gold: #ffb088;
+    --teal: #2dd4bf;
+    --teal-dim: #1a8f82;
+    --amber: #ffb020;
+    --text: #fbf7f5;
+    --text-dim: #c9aab0;
+    --text-faint: #8a6670;
+    --online: #4ade80;
+    --offline: #ef4444;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---------- AMBIENT BACKGROUND ---------- */
+  .ambient{
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 55% at 50% -10%, rgba(255,59,92,0.16), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 92% 15%, rgba(45,212,191,0.08), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 8% 95%, rgba(255,176,136,0.08), transparent 60%),
+      linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 100%);
+  }
+  .grid-overlay{
+    position: fixed; inset:0; z-index:0; pointer-events:none; opacity:0.35;
+    background-image:
+      linear-gradient(rgba(255,178,150,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,178,150,0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  }
+
+  a{ color: inherit; }
+  :focus-visible{ outline: 2px solid var(--rose-gold); outline-offset: 2px; }
+
+  .wrap{ position:relative; z-index:1; max-width: 1180px; margin:0 auto; padding: 0 28px; }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 22px 0; border-bottom: 1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:14px; }
+  .brand-mark{
+    width:44px; height:44px; border-radius:12px; flex-shrink:0;
+    background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 8px 24px rgba(255,59,92,0.32);
+  }
+  .brand-mark svg{ width:24px; height:24px; }
+  .brand-text h1{ font-family: var(--font-display); font-size:18px; font-weight:700; letter-spacing:-0.01em; }
+  .brand-text p{ font-size:12px; color: var(--text-faint); margin-top:1px; }
+  .brand-text p b{ color: var(--rose-gold); font-weight:600; }
+
+  .status-pill{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600;
+    padding:8px 14px; border-radius:20px; background: rgba(0,0,0,0.32); border:1px solid var(--border);
+  }
+  .status-dot{ width:7px; height:7px; border-radius:50%; background: var(--online); box-shadow:0 0 6px rgba(74,222,128,0.6); animation: dotPulse 2s ease-in-out infinite; }
+  @keyframes dotPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(74,222,128,0.5); } 50%{ box-shadow:0 0 0 5px rgba(74,222,128,0); } }
+  .status-dot.warn{ background: var(--amber); box-shadow:0 0 6px rgba(255,176,32,0.6); }
+  .status-dot.bad{ background: var(--offline); box-shadow:0 0 6px rgba(239,68,68,0.6); }
+
+  /* ---------- HERO ---------- */
+  .hero{ padding: 56px 0 40px; text-align:center; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:11.5px; font-weight:600;
+    letter-spacing:0.12em; text-transform:uppercase; color: var(--rose-gold);
+    background: rgba(255,176,136,0.08); border:1px solid rgba(255,176,136,0.2);
+    padding:6px 14px; border-radius:20px; margin-bottom:22px;
+  }
+  .hero h2{
+    font-family: var(--font-display); font-size: 46px; font-weight:700; line-height:1.12; letter-spacing:-0.02em;
+    max-width: 780px; margin: 0 auto;
+  }
+  .hero h2 span{
+    background: linear-gradient(95deg, var(--crimson-bright), var(--rose-gold));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p{ color: var(--text-dim); font-size:15.5px; margin: 18px auto 0; max-width: 560px; line-height:1.6; }
+
+  /* Heartbeat waveform */
+  .heartbeat{ margin: 36px auto 0; width: 100%; max-width: 640px; height: 60px; }
+  .heartbeat svg{ width:100%; height:100%; }
+  .hb-line{
+    fill:none; stroke: var(--crimson-bright); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+    filter: drop-shadow(0 0 6px rgba(255,92,121,0.5));
+    stroke-dasharray: 1200; stroke-dashoffset: 1200;
+    animation: hbDraw 3.2s ease-in-out infinite;
+  }
+  @keyframes hbDraw{ 0%{ stroke-dashoffset:1200; } 55%{ stroke-dashoffset:0; } 100%{ stroke-dashoffset:-1200; } }
+
+  /* ---------- STATS ---------- */
+  .stats{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin: 40px 0; }
+  .stat-card{
+    background: var(--surface-glass); border:1px solid var(--border); border-radius:14px;
+    padding:18px 20px; backdrop-filter: blur(16px);
+  }
+  .stat-card .val{ font-family: var(--font-display); font-size:26px; font-weight:700; }
+  .stat-card .val.crimson{ color: var(--crimson-bright); }
+  .stat-card .val.teal{ color: var(--teal); }
+  .stat-card .lbl{ font-size:11.5px; color: var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  /* ---------- SECTION HEADS ---------- */
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; margin: 46px 0 18px; flex-wrap:wrap; gap:10px; }
+  .section-head h3{ font-family: var(--font-display); font-size:20px; font-weight:700; }
+  .section-head p{ font-size:13px; color: var(--text-faint); }
+
+  /* ---------- MAIN GRID ---------- */
+  .main-grid{ display:grid; grid-template-columns: 340px 1fr; gap:20px; align-items:start; }
+
+  .services{ display:flex; flex-direction:column; gap:14px; }
+  .svc-card{
+    background: var(--surface-glass); border:1px solid var(--border); border-radius:16px;
+    padding:18px 20px; backdrop-filter: blur(16px); transition: border-color .3s, box-shadow .3s;
+  }
+  .svc-card.degraded{ border-color: rgba(255,176,32,0.45); box-shadow: 0 0 0 1px rgba(255,176,32,0.12), 0 0 24px rgba(255,176,32,0.08); }
+  .svc-card.down{ border-color: rgba(239,68,68,0.5); box-shadow: 0 0 0 1px rgba(239,68,68,0.14), 0 0 24px rgba(239,68,68,0.1); }
+  .svc-card.working{ border-color: rgba(255,176,136,0.45); }
+  .svc-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .svc-name{ display:flex; align-items:center; gap:9px; font-weight:600; font-size:14px; }
+  .svc-icon{ width:28px; height:28px; border-radius:8px; background: var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .svc-badge{
+    font-size:10.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+    padding:4px 9px; border-radius:20px; background: rgba(74,222,128,0.12); color: var(--online);
+    border:1px solid rgba(74,222,128,0.3); display:flex; align-items:center; gap:5px;
+  }
+  .svc-badge .b-dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
+  .svc-badge.warn{ background: rgba(255,176,32,0.12); color: var(--amber); border-color: rgba(255,176,32,0.3); }
+  .svc-badge.bad{ background: rgba(239,68,68,0.12); color: var(--offline); border-color: rgba(239,68,68,0.3); }
+  .svc-desc{ font-size:12px; color: var(--text-faint); line-height:1.5; }
+  .svc-metric{ font-family: var(--font-mono); font-size:11.5px; color: var(--text-dim); margin-top:9px; display:flex; justify-content:space-between; }
+
+  /* ---------- TERMINAL ---------- */
+  .terminal{
+    background: rgba(5,2,4,0.75); border:1px solid var(--border); border-radius:16px;
+    backdrop-filter: blur(16px); overflow:hidden; display:flex; flex-direction:column; height: 460px;
+  }
+  .terminal-head{
+    display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--border);
+    background: rgba(0,0,0,0.25);
+  }
+  .term-dot{ width:10px; height:10px; border-radius:50%; }
+  .term-dot.r{ background:#ff5f57; } .term-dot.y{ background:#ffbd2e; } .term-dot.g{ background:#28c840; }
+  .terminal-head span{ margin-left:8px; font-family: var(--font-mono); font-size:11.5px; color: var(--text-faint); }
+  .terminal-body{
+    flex:1; overflow-y:auto; padding:16px 18px; font-family: var(--font-mono); font-size:12.5px; line-height:1.75;
+  }
+  .terminal-body::-webkit-scrollbar{ width:8px; }
+  .terminal-body::-webkit-scrollbar-thumb{ background: var(--surface-2); border-radius:4px; }
+  .log-line{ white-space:pre-wrap; word-break:break-word; opacity:0; animation: lineIn .25s ease forwards; }
+  @keyframes lineIn{ from{ opacity:0; transform: translateY(3px); } to{ opacity:1; transform:none; } }
+  .log-line .tag{ color: var(--text-faint); }
+  .log-line.evt-detect{ color: var(--amber); }
+  .log-line.evt-agent{ color: var(--rose-gold); }
+  .log-line.evt-fix{ color: var(--teal); }
+  .log-line.evt-ok{ color: var(--online); font-weight:600; }
+  .log-line.evt-err{ color: var(--offline); }
+  .caret{ display:inline-block; width:7px; height:14px; background: var(--crimson-bright); margin-left:2px; vertical-align:-2px; animation: blink 1s step-end infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* ---------- CONTROLS ---------- */
+  .controls{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin: 22px 0 8px;
+    background: var(--surface-glass); border:1px solid var(--border); border-radius:16px; padding:18px 20px;
+    backdrop-filter: blur(16px);
+  }
+  .controls .grp-label{ font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-faint); width:100%; margin-bottom:2px; }
+  .chaos-btn{
+    padding:11px 18px; border-radius:10px; border:1px solid var(--border); cursor:pointer;
+    background: rgba(0,0,0,0.25); color: var(--text); font-family:var(--font-body); font-weight:600; font-size:13px;
+    display:flex; align-items:center; gap:8px; transition: all .15s;
+  }
+  .chaos-btn:hover:not(:disabled){ border-color: var(--border-bright); transform: translateY(-1px); }
+  .chaos-btn:disabled{ opacity:0.4; cursor:default; }
+  .chaos-btn.primary{
+    background: linear-gradient(135deg, var(--crimson) 0%, var(--crimson-dim) 100%);
+    border:none; box-shadow: 0 8px 22px rgba(255,59,92,0.3);
+  }
+  .chaos-btn.primary:hover:not(:disabled){ box-shadow: 0 12px 28px rgba(255,59,92,0.4); }
+  .chaos-btn.reset{ margin-left:auto; background:none; color: var(--text-faint); }
+  .chaos-btn.reset:hover:not(:disabled){ color: var(--rose-gold); }
+
+  select.provider{
+    background: rgba(0,0,0,0.25); border:1px solid var(--border); color: var(--text);
+    font-family: var(--font-body); font-size:12.5px; font-weight:600; padding:9px 12px; border-radius:10px;
+    cursor:pointer;
+  }
+
+  /* ---------- INCIDENT HISTORY ---------- */
+  .history{ display:flex; flex-direction:column; gap:10px; margin-bottom:60px; }
+  .history-empty{
+    text-align:center; padding:34px 20px; color: var(--text-faint); font-size:13px;
+    background: var(--surface-glass); border:1px dashed var(--border); border-radius:14px;
+  }
+  .inc-card{
+    display:grid; grid-template-columns: 90px 1fr auto; gap:16px; align-items:center;
+    background: var(--surface-glass); border:1px solid var(--border); border-radius:14px;
+    padding:14px 18px; animation: cardIn .4s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes cardIn{ from{ opacity:0; transform: translateY(10px); } to{ opacity:1; transform:none; } }
+  .inc-badge{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    padding:6px 0; border-radius:8px; text-align:center; background: rgba(74,222,128,0.12); color: var(--online);
+    border:1px solid rgba(74,222,128,0.3);
+  }
+  .inc-main .inc-title{ font-weight:600; font-size:13.5px; }
+  .inc-main .inc-sub{ font-size:11.5px; color: var(--text-faint); margin-top:2px; font-family: var(--font-mono); }
+  .inc-time{ font-size:11.5px; color: var(--text-faint); font-family: var(--font-mono); white-space:nowrap; }
+
+  /* ---------- VERIFIED REAL INCIDENT ---------- */
+  .verified{
+    background: linear-gradient(180deg, rgba(45,212,191,0.07), rgba(45,212,191,0.02));
+    border:1px solid rgba(45,212,191,0.28); border-radius:16px;
+    padding:22px 24px; margin: 26px 0 8px; backdrop-filter: blur(16px);
+  }
+  .verified-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .verified-tag{
+    display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    letter-spacing:0.06em; text-transform:uppercase; color: var(--teal);
+    background: rgba(45,212,191,0.14); border:1px solid rgba(45,212,191,0.35);
+    padding:5px 11px; border-radius:20px;
+  }
+  .verified-tag .b-dot{ width:6px; height:6px; border-radius:50%; background: currentColor; }
+  .verified-head h4{ font-family: var(--font-display); font-size:16px; font-weight:700; }
+  .verified-sub{ font-size:12.5px; color: var(--text-faint); margin-bottom:16px; line-height:1.6; }
+  .verified-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:16px; }
+  .v-stat{ background: rgba(0,0,0,0.22); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .v-stat .v-val{ font-family: var(--font-mono); font-size:13.5px; font-weight:600; color: var(--teal); word-break:break-word; }
+  .v-stat .v-lbl{ font-size:10.5px; color: var(--text-faint); text-transform:uppercase; letter-spacing:0.05em; margin-top:3px; }
+  .verified-report{
+    font-family: var(--font-mono); font-size:12px; line-height:1.7; color: var(--text-dim);
+    background: rgba(0,0,0,0.28); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; white-space:pre-wrap; word-break:break-word;
+  }
+  .verified-report b{ color: var(--teal); }
+  @media (max-width: 880px){ .verified-grid{ grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid var(--border); padding: 30px 0 40px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+  }
+  footer .f-left{ font-size:12.5px; color: var(--text-faint); }
+  footer .f-left b{ color: var(--rose-gold); }
+  footer .f-links{ display:flex; gap:18px; font-size:12.5px; }
+  footer .f-links a{ color: var(--text-dim); text-decoration:none; transition: color .15s; }
+  footer .f-links a:hover{ color: var(--rose-gold); }
+
+  @media (max-width: 880px){
+    .main-grid{ grid-template-columns: 1fr; }
+    .stats{ grid-template-columns: repeat(2, 1fr); }
+    .hero h2{ font-size:32px; }
+    .terminal{ height:380px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+<div class="grid-overlay"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 12h4l2 8 4-16 2 8h6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>SRE-Agent</h1>
+        <p>self-healing demo by <b>Vignesh Yadala</b></p>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot" id="globalDot"></span>
+      <span id="globalStatus">3 / 3 Services Healthy</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">Interactive Simulation · No Backend Required</span>
+    <h2>Infrastructure that <span>heals itself</span> in real time.</h2>
+    <p>This is a live, in-browser simulation of the SRE-Agent detect → diagnose → remediate → verify
+       loop. Trigger a real incident type below and watch the autonomous agent handle it end-to-end —
+       no human, no manual restart, no dashboard-refreshing.</p>
+
+    <div class="heartbeat" aria-hidden="true">
+      <svg viewBox="0 0 640 60" preserveAspectRatio="none">
+        <path class="hb-line" d="M0,30 L140,30 L162,8 L184,52 L206,30 L228,30 L250,14 L268,46 L286,30 L640,30" />
+      </svg>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat-card"><div class="val teal" id="statUptime">100%</div><div class="lbl">Uptime This Session</div></div>
+    <div class="stat-card"><div class="val" id="statIncidents">0</div><div class="lbl">Incidents Resolved</div></div>
+    <div class="stat-card"><div class="val crimson" id="statMttr">—</div><div class="lbl">Avg. Time To Recover</div></div>
+    <div class="stat-card"><div class="val" style="font-size:16px; padding-top:4px;" id="statProvider">Gemini 2.5</div><div class="lbl">Active LLM Provider</div></div>
+  </div>
+
+  <div class="verified">
+    <div class="verified-head">
+      <span class="verified-tag"><span class="b-dot"></span>Verified Real Test Run</span>
+      <h4>Not a simulation — this incident actually happened</h4>
+    </div>
+    <p class="verified-sub">
+      Captured directly from the running stack's own <code>/incidents</code> audit trail on
+      <b>July 8, 2026</b>. Real Docker containers, a real memory-leak chaos endpoint, a real
+      LangChain + ChromaDB agent, and a real <code>docker restart</code> — not staged, not edited.
+      The interactive demo below lets you replay this loop yourself; everything on this card is
+      the system's own record of what it actually did.
+    </p>
+    <div class="verified-grid">
+      <div class="v-stat"><div class="v-val">http_503</div><div class="v-lbl">Trigger</div></div>
+      <div class="v-stat"><div class="v-val">07:43:32 UTC</div><div class="v-lbl">Detected At</div></div>
+      <div class="v-stat"><div class="v-val">07:44:39 UTC</div><div class="v-lbl">Resolved At</div></div>
+      <div class="v-stat"><div class="v-val">RESOLVED · 67s</div><div class="v-lbl">Outcome</div></div>
+    </div>
+    <div class="verified-report">I matched the "JavaScript Heap Out of Memory (Memory Leak)" runbook.
+I remediated the issue by executing <b>docker restart sre-target-app</b>.
+The service health has been verified as 200 OK.</div>
+  </div>
+
+  <div class="section-head">
+    <div><h3>Live System State</h3><p>Interactive simulation — try the loop yourself below</p></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="services">
+      <div class="svc-card" id="card-target">
+        <div class="svc-top">
+          <div class="svc-name"><span class="svc-icon">🎯</span> target-app</div>
+          <span class="svc-badge" id="badge-target"><span class="b-dot"></span>Healthy</span>
+        </div>
+        <div class="svc-desc">Node.js/Express — exposes /health &amp; chaos-injection endpoints</div>
+        <div class="svc-metric"><span>rssMB</span><span id="metric-rss">55</span></div>
+        <div class="svc-metric"><span>uptime</span><span id="metric-uptime">4h 12m</span></div>
+      </div>
+
+      <div class="svc-card" id="card-monitor">
+        <div class="svc-top">
+          <div class="svc-name"><span class="svc-icon">📡</span> monitor</div>
+          <span class="svc-badge" id="badge-monitor"><span class="b-dot"></span>Healthy</span>
+        </div>
+        <div class="svc-desc">FastAPI — polls /health every 10s, classifies incident type</div>
+        <div class="svc-metric"><span>poll interval</span><span>10s</span></div>
+        <div class="svc-metric"><span>last check</span><span id="metric-lastcheck">just now</span></div>
+      </div>
+
+      <div class="svc-card" id="card-agent">
+        <div class="svc-top">
+          <div class="svc-name"><span class="svc-icon">🧠</span> agent-brain</div>
+          <span class="svc-badge" id="badge-agent"><span class="b-dot"></span>Idle</span>
+        </div>
+        <div class="svc-desc">LangChain + ChromaDB RAG — matches runbooks, executes fixes</div>
+        <div class="svc-metric"><span>runbooks loaded</span><span>3</span></div>
+        <div class="svc-metric"><span>provider</span><span id="metric-provider">gemini-2.5-flash</span></div>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-head">
+        <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+        <span>docker compose logs -f monitor</span>
+      </div>
+      <div class="terminal-body" id="termBody">
+        <div class="log-line"><span class="tag">[monitor]</span> Started. Polling http://target-app:3000/health every 10.0s.</div>
+        <div class="log-line"><span class="tag">[monitor]</span> INFO: 127.0.0.1 - "GET /health HTTP/1.1" 200 OK</div>
+        <div class="log-line"><span class="tag">[monitor]</span> INFO: 127.0.0.1 - "GET /health HTTP/1.1" 200 OK<span class="caret"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="grp-label">Trigger a Simulated Incident</span>
+    <button class="chaos-btn primary" onclick="runIncident('leak')" id="btn-leak">🔥 Memory Leak</button>
+    <button class="chaos-btn primary" onclick="runIncident('db')" id="btn-db">🔌 DB Connection Failure</button>
+    <button class="chaos-btn primary" onclick="runIncident('cpu')" id="btn-cpu">⚡ CPU Spike</button>
+    <select class="provider" id="providerSelect" onchange="changeProvider()">
+      <option value="Gemini 2.5|gemini-2.5-flash">Gemini 2.5 Flash</option>
+      <option value="GPT-4.1|gpt-4.1-mini">OpenAI GPT-4.1 mini</option>
+      <option value="Claude|claude-sonnet-4-6">Claude Sonnet 4.6</option>
+    </select>
+    <button class="chaos-btn reset" onclick="resetDemo()" id="btn-reset">↺ Reset Demo</button>
+  </div>
+
+  <div class="section-head">
+    <div><h3>Incident History <span style="color:var(--text-faint); font-weight:500; font-size:13px;">(simulated)</span></h3><p>Trigger a demo incident above to see it appear here</p></div>
+  </div>
+  <div class="history" id="historyList">
+    <div class="history-empty" id="historyEmpty">No incidents yet — trigger one above to see the full autonomous recovery loop.</div>
+  </div>
+
+  <footer>
+    <div class="f-left">Built by <b>Vignesh Yadala</b> — Autonomous Self-Healing DevOps System</div>
+    <div class="f-links">
+      <a href="https://vigneshyadala.github.io/portfolio/" target="_blank" rel="noopener">Portfolio</a>
+      <a href="https://github.com/Vigneshyadala" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let busy = false;
+  let incidentCount = 0;
+  let mttrTotal = 0;
+  let sessionStart = Date.now();
+
+  const runbooks = {
+    leak: {
+      title: 'JavaScript Heap Out of Memory (Memory Leak)',
+      distance: '0.5088',
+      trigger: 'http_503',
+      logsShown: [
+        { t: '[target-app] WARN: Chaos endpoint triggered -> memory leak simulation starting', c: '' },
+        { t: '[target-app] LEAK: allocated chunk #61, rss=365MB', c: '' },
+        { t: '[monitor] Incident detected: http_503. Capturing logs...', c: 'evt-detect' },
+        { t: '[monitor] Invoking SRE-Agent brain...', c: 'evt-detect' },
+        { t: '[agent-brain] Searching runbooks for "JavaScript heap out of memory"...', c: 'evt-agent' },
+      ],
+      fixLog: 'restarted <b>sre-target-app</b> to clear leaked heap allocations',
+    },
+    db: {
+      title: 'Database Connection Refused / ECONNREFUSED',
+      distance: '0.4762',
+      trigger: 'http_503',
+      logsShown: [
+        { t: '[target-app] ERROR: DatabaseConnectionError: connection to postgres pool lost', c: '' },
+        { t: '[monitor] Incident detected: http_503. Capturing logs...', c: 'evt-detect' },
+        { t: '[monitor] Invoking SRE-Agent brain...', c: 'evt-detect' },
+        { t: '[agent-brain] Searching runbooks for "ECONNREFUSED postgres"...', c: 'evt-agent' },
+      ],
+      fixLog: 'restarted <b>sre-target-app</b> to force a clean database reconnect',
+    },
+    cpu: {
+      title: 'CPU Spike / Event Loop Starvation',
+      distance: '0.5531',
+      trigger: 'timeout',
+      logsShown: [
+        { t: '[target-app] WARN: Chaos endpoint triggered -> CPU spike simulation starting', c: '' },
+        { t: '[monitor] Incident detected: timeout. Capturing logs...', c: 'evt-detect' },
+        { t: '[monitor] Invoking SRE-Agent brain...', c: 'evt-detect' },
+        { t: '[agent-brain] Searching runbooks for "event loop blocked CPU"...', c: 'evt-agent' },
+      ],
+      fixLog: 'restarted <b>sre-target-app</b> to clear the blocked event loop',
+    }
+  };
+
+  function log(text, cls){
+    const body = document.getElementById('termBody');
+    const caret = body.querySelector('.caret');
+    if(caret) caret.parentElement.classList.remove('caret-holder');
+    body.querySelectorAll('.caret').forEach(c => c.remove());
+    const line = document.createElement('div');
+    line.className = 'log-line' + (cls ? ' ' + cls : '');
+    line.innerHTML = text;
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function addCaret(){
+    const body = document.getElementById('termBody');
+    const last = body.lastElementChild;
+    if(last){
+      const c = document.createElement('span');
+      c.className = 'caret';
+      last.appendChild(c);
+    }
+  }
+
+  function setBadge(id, state, text){
+    const el = document.getElementById(id);
+    el.className = 'svc-badge' + (state === 'warn' ? ' warn' : state === 'bad' ? ' bad' : '');
+    el.innerHTML = '<span class="b-dot"></span>' + text;
+  }
+
+  function setCard(id, state){
+    const el = document.getElementById(id);
+    el.className = 'svc-card' + (state ? ' ' + state : '');
+  }
+
+  function setGlobal(state, text){
+    const dot = document.getElementById('globalDot');
+    dot.className = 'status-dot' + (state === 'warn' ? ' warn' : state === 'bad' ? ' bad' : '');
+    document.getElementById('globalStatus').textContent = text;
+  }
+
+  function toggleButtons(disabled){
+    ['btn-leak','btn-db','btn-cpu'].forEach(id => document.getElementById(id).disabled = disabled);
+  }
+
+  function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function runIncident(type){
+    if(busy) return;
+    busy = true;
+    toggleButtons(true);
+    const rb = runbooks[type];
+    const startTime = Date.now();
+
+    addCaret();
+    await wait(300);
+
+    // 1. Target app degrades
+    setCard('card-target', 'down');
+    setBadge('badge-target', 'bad', 'Degraded');
+    setGlobal('bad', '2 / 3 Services Healthy');
+    log(rb.logsShown[0].t, rb.logsShown[0].c);
+    await wait(900);
+
+    // 2. Monitor detects
+    setCard('card-monitor', 'working');
+    setBadge('badge-monitor', 'warn', 'Detecting');
+    log(rb.logsShown[1].t, rb.logsShown[1].c);
+    await wait(700);
+    log(rb.logsShown[2].t, rb.logsShown[2].c);
+    await wait(900);
+
+    // 3. Agent brain reasoning
+    setCard('card-agent', 'working');
+    setBadge('badge-agent', 'warn', 'Reasoning...');
+    log(rb.logsShown[3].t, rb.logsShown[3].c);
+    await wait(1100);
+    log(`[agent-brain] Matched Runbook: <b>${rb.title}</b> (similarity distance=${rb.distance})`, 'evt-agent');
+    await wait(900);
+    log(`[agent-brain] Executing remediation: <b>docker restart sre-target-app</b>`, 'evt-fix');
+    await wait(1000);
+
+    // 4. Target app restarting -> healthy
+    setBadge('badge-target', 'warn', 'Restarting');
+    await wait(1000);
+    setCard('card-target', '');
+    setBadge('badge-target', '', 'Healthy');
+    document.getElementById('metric-rss').textContent = '55';
+    log('[monitor] INFO: "GET /health HTTP/1.1" 200 OK', '');
+    await wait(600);
+    log(`[monitor] Target recovered. Resolving open incident.`, 'evt-ok');
+    await wait(400);
+
+    // 5. Everything healthy again
+    setCard('card-monitor', ''); setBadge('badge-monitor', '', 'Healthy');
+    setCard('card-agent', ''); setBadge('badge-agent', '', 'Idle');
+    setGlobal('', '3 / 3 Services Healthy');
+    addCaret();
+
+    const elapsedSec = Math.max(4, Math.round((Date.now() - startTime) / 1000) + 6);
+    addHistoryEntry(rb, elapsedSec);
+    updateStats(elapsedSec);
+
+    busy = false;
+    toggleButtons(false);
+  }
+
+  function addHistoryEntry(rb, seconds){
+    const empty = document.getElementById('historyEmpty');
+    if(empty) empty.remove();
+    const list = document.getElementById('historyList');
+    const now = new Date();
+    const card = document.createElement('div');
+    card.className = 'inc-card';
+    card.innerHTML = `
+      <div class="inc-badge">RESOLVED</div>
+      <div class="inc-main">
+        <div class="inc-title">${rb.title}</div>
+        <div class="inc-sub">trigger: ${rb.trigger} · runbook match distance ${rb.distance} · ${rb.fixLog}</div>
+      </div>
+      <div class="inc-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})} · resolved in ${seconds}s</div>
+    `;
+    list.prepend(card);
+  }
+
+  function updateStats(seconds){
+    incidentCount += 1;
+    mttrTotal += seconds;
+    document.getElementById('statIncidents').textContent = incidentCount;
+    document.getElementById('statMttr').textContent = Math.round(mttrTotal / incidentCount) + 's';
+  }
+
+  function changeProvider(){
+    const [label, model] = document.getElementById('providerSelect').value.split('|');
+    document.getElementById('statProvider').textContent = label;
+    document.getElementById('metric-provider').textContent = model;
+    log(`[agent-brain] LLM provider switched to <b>${model}</b>`, 'evt-agent');
+    addCaret();
+  }
+
+  function resetDemo(){
+    if(busy) return;
+    document.getElementById('termBody').innerHTML = `
+      <div class="log-line"><span class="tag">[monitor]</span> Started. Polling http://target-app:3000/health every 10.0s.</div>
+      <div class="log-line"><span class="tag">[monitor]</span> INFO: 127.0.0.1 - "GET /health HTTP/1.1" 200 OK<span class="caret"></span></div>
+    `;
+    document.getElementById('historyList').innerHTML = '<div class="history-empty" id="historyEmpty">No incidents yet — trigger one above to see the full autonomous recovery loop.</div>';
+    incidentCount = 0; mttrTotal = 0;
+    document.getElementById('statIncidents').textContent = '0';
+    document.getElementById('statMttr').textContent = '—';
+    setCard('card-target', ''); setBadge('badge-target', '', 'Healthy');
+    setCard('card-monitor', ''); setBadge('badge-monitor', '', 'Healthy');
+    setCard('card-agent', ''); setBadge('badge-agent', '', 'Idle');
+    setGlobal('', '3 / 3 Services Healthy');
+  }
+
+  // Simulate a gentle background heartbeat of routine health checks
+  setInterval(() => {
+    if(busy) return;
+    const uptimeMin = Math.floor((Date.now() - sessionStart) / 60000);
+    document.getElementById('metric-lastcheck').textContent = uptimeMin === 0 ? 'just now' : uptimeMin + 'm ago';
+  }, 5000);
+</script>
+
+</body>
+</html>
