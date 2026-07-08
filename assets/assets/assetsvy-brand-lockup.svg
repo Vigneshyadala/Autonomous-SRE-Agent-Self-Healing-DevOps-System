@@ -1,0 +1,24 @@
+<svg width="520" height="100" viewBox="0 0 520 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#ffb088"/>
+    </linearGradient>
+    <linearGradient id="nameGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c9a6ff"/>
+      <stop offset="55%" stop-color="#e2a6d8"/>
+      <stop offset="100%" stop-color="#ffb088"/>
+    </linearGradient>
+  </defs>
+
+  <!-- VY square badge -->
+  <rect x="0" y="15" width="70" height="70" rx="18" fill="url(#badgeGrad)"/>
+  <text x="35" y="63" font-family="'Space Grotesk','Segoe UI',sans-serif" font-size="26" font-weight="700"
+        fill="#1a1024" text-anchor="middle">VY</text>
+
+  <!-- wordmark -->
+  <text x="92" y="45" font-family="'JetBrains Mono','Courier New',monospace" font-size="11.5" font-weight="600"
+        letter-spacing="2.5" fill="#8a8296">ENGINEERED END-TO-END BY</text>
+  <text x="90" y="78" font-family="'Space Grotesk','Segoe UI',sans-serif" font-size="34" font-weight="700"
+        fill="url(#nameGrad)">Vignesh Yadala</text>
+</svg>
