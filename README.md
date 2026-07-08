@@ -6,33 +6,80 @@
 \____/|_| /_/____/\____/_/ /_/_/ /_/ /_/ /_/\____/\__,_/____/____/_/ |_|\____/
 ```
 
-# Autonomous SRE Agent: Self-Healing DevOps System
+# 🤖 Autonomous SRE Agent
+### Self-healing infrastructure. No human in the loop.
+
+![Status](https://img.shields.io/badge/status-live%20demo-2dd4bf?style=flat-square)
+![Python](https://img.shields.io/badge/python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-0.2.16-1C3C3C?style=flat-square)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-RAG-ff3b5c?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-ffb088?style=flat-square)
+
+**Developed & Engineered by Vignesh Yadala — © 2026**
+
+[Live Interactive Demo](#) · [Portfolio](https://vigneshyadala.github.io/portfolio) · [GitHub](https://github.com/Vigneshyadala)
+
+---
+
+## 📌 About
 
 An agentic AI system that watches a live containerized application, diagnoses
 production incidents against a retrieval-augmented "company runbook" knowledge
-base, and autonomously executes the fix — no human in the loop.
+base, and **autonomously executes the fix** — no dashboard-refreshing, no
+2 AM pages, no human touching the keyboard.
 
-**Detect → Diagnose (RAG) → Decide (LLM tool-calling) → Heal (Docker) → Verify**
+It's the full production loop, compressed into three Docker containers:
 
----
+```
+Detect  →  Diagnose (RAG)  →  Decide (LLM tool-calling)  →  Heal (Docker)  →  Verify
+```
 
-### 🧠 Built by **Vignesh Yadala**
-
-> Portfolio: [vigneshyadala.github.io/portfolio](https://vigneshyadala.github.io/portfolio)
-> GitHub: [github.com/Vigneshyadala](https://github.com/Vigneshyadala)
-
-This project was designed and engineered end-to-end by Vignesh Yadala as a
-demonstration of applied Agentic AI (LangChain/LangGraph), Retrieval-Augmented
-Generation, and container-native DevOps automation — combining three
-disciplines that rarely meet in a single B.Tech CSE portfolio piece.
+Every incident it resolves is timestamped, logged, and auditable — nothing
+is staged. The included live demo bundles a **real verified incident**
+straight from the system's own `/incidents` record, alongside an
+interactive simulation you can replay yourself.
 
 ---
 
-## Architecture
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🧠 **RAG Runbook Matching** | ChromaDB vector search over a real "company runbook" library — the agent reasons from institutional knowledge, not guesswork |
+| 🛠️ **Tool-Calling Remediation** | LangChain agent decides *when* and *which* fix to apply, restricted to an allow-listed Docker toolset |
+| 📡 **Autonomous Monitoring** | FastAPI watcher polls `/health` every 10s, captures logs the instant something degrades |
+| 🔒 **Sandboxed Execution** | No raw shell access — only 7 whitelisted Docker verbs, one pre-approved target container, zero shell metacharacters |
+| ✅ **Self-Verifying** | The agent doesn't just act — it re-checks `/health` afterward and reports the real outcome |
+| 🔥 **Chaos Engineering Built-In** | Memory leaks, DB connection failures, and CPU spikes on tap via dedicated endpoints |
+| 🔌 **Multi-LLM Ready** | Swap between Gemini, OpenAI, and Claude via a single env var — no code changes |
+| 📊 **Full Audit Trail** | Every detection, diagnosis, and resolution logged with timestamps via `/incidents` |
+
+---
+
+## 🛠️ Tech Stack
+
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4.19-000000?style=flat-square&logo=express&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-agent-1C3C3C?style=flat-square)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-vector%20store-ff3b5c?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+- **Target application** — Node.js / Express, with intentional chaos-injection endpoints
+- **Monitor & webhook** — Python / FastAPI, polling + incident capture
+- **Agent brain** — LangChain tool-calling agent + ChromaDB RAG over runbooks.json
+- **Orchestration** — Docker Compose, all three services networked together
+- **LLM providers** — Gemini 2.5 Flash / GPT-4.1 mini / Claude Sonnet, hot-swappable
+
+---
+
+## 🏗️ Architecture
 
 ```
                     ┌─────────────────────┐
-                    │   1. target-app      │   Node.js + Express
+                    │   1. target-app       │   Node.js + Express
                     │   /health  /data      │   intentional chaos
                     │   /chaos/leak  /db    │   endpoints
                     └──────────┬───────────┘
@@ -56,89 +103,114 @@ disciplines that rarely meet in a single B.Tech CSE portfolio piece.
                     └─────────────────────┘
 ```
 
-## Services
-
 | Service | Tech | Port | Role |
 |---|---|---|---|
-| `target-app` | Node.js / Express | 3500 (host) → 3000 (container) | App-under-test with chaos endpoints |
-| `monitor-webhook` | Python / FastAPI | 8000 | Health polling, incident detection, log capture |
-| `agent-brain` | Python / LangChain / ChromaDB | 8001 | RAG diagnosis + restricted tool-calling remediation |
+| `target-app` | Node.js / Express | `3500 → 3000` | App-under-test with chaos endpoints |
+| `monitor-webhook` | Python / FastAPI | `8000` | Health polling, incident detection, log capture |
+| `agent-brain` | Python / LangChain / ChromaDB | `8001` | RAG diagnosis + restricted tool-calling remediation |
 
-## Quick Start
+---
 
+## 🚀 Quick Start
+
+**1️⃣ Clone the repo**
 ```bash
-git clone <this-repo>
+git clone https://github.com/Vigneshyadala/sre-agent.git
 cd sre-agent
+```
 
-# 1. Configure your LLM credentials
+**2️⃣ Configure your LLM credentials**
+```bash
 cp agent-system/.env.example agent-system/.env
-# edit agent-system/.env and set LLM_PROVIDER + the matching API key
+# edit agent-system/.env → set LLM_PROVIDER + the matching API key
+```
 
-# 2. Build and start the whole stack
+**3️⃣ Build and start the whole stack**
+```bash
 docker compose up --build
 ```
 
-Once all three containers report healthy:
-
+**4️⃣ Confirm baseline health**
 ```bash
-# Confirm baseline health
 curl http://localhost:3500/health
+```
 
-# Trigger an incident: simulate a memory leak
-curl http://localhost:3500/chaos/leak
+**5️⃣ Trigger a real incident**
+```bash
+curl http://localhost:3500/chaos/leak    # simulated memory leak
+curl http://localhost:3500/chaos/db      # simulated DB connection failure
+curl http://localhost:3500/chaos/cpu     # simulated CPU spike
+```
 
-# Watch the monitor detect it and the agent heal it
+**6️⃣ Watch it heal itself**
+```bash
 curl http://localhost:8000/status
 curl http://localhost:8000/incidents
 ```
 
-Within ~1-2 polling cycles (10-20 seconds), the monitor should detect the
-degraded `/health` response, capture the container's logs, hand them to
-`agent-brain`, which matches the memory-leak runbook in ChromaDB, issues a
-`docker restart sre-target-app`, and confirms recovery — all without a human
-touching the keyboard.
+Within 1–2 polling cycles (10–20s), the monitor detects the degraded
+`/health` response, captures the container's logs, hands them to
+`agent-brain`, which matches the correct runbook in ChromaDB, issues a
+`docker restart`, and confirms recovery — all without a human touching
+the keyboard.
 
-Try the other chaos scenarios the same way:
+---
 
-```bash
-curl http://localhost:3500/chaos/db     # simulated DB connection failure
-curl http://localhost:3500/chaos/cpu    # simulated CPU spike / blocked event loop
-```
+## 🔒 Security & Safety Design
 
-## Repository Layout
+The agent is deliberately **not** given a raw shell:
+
+✅ `execute_docker_command` is an allow-listed tool — only 7 verbs permitted (`restart`, `logs`, `ps`, `stats`, `start`, `stop`, `inspect`)
+✅ Only the one pre-approved target container may ever be referenced
+✅ Shell metacharacters are rejected outright
+✅ Every command runs via `subprocess` with `shell=False` — never through a shell interpreter
+✅ The LLM decides *when* and *which* runbook action to take, but cannot escalate beyond this fixed, auditable toolset
+
+This is what makes the "autonomous" part safe enough to demo live.
+
+---
+
+## 📁 Repository Structure
 
 ```
 sre-agent/
-├── target-app/          # Node.js Express app + chaos endpoints
+├── target-app/           # Node.js Express app + chaos endpoints
 │   ├── app.js
 │   ├── Dockerfile
 │   └── package.json
-├── agent-system/         # LangChain agent brain + ChromaDB RAG
+├── agent-system/          # LangChain agent brain + ChromaDB RAG
 │   ├── agent_brain.py
 │   ├── agent_service.py
 │   ├── runbooks.json
 │   ├── requirements.txt
 │   ├── Dockerfile
 │   └── .env.example
-├── monitor-webhook/      # FastAPI monitor + webhook trigger
+├── monitor-webhook/       # FastAPI monitor + webhook trigger
 │   ├── monitor.py
 │   ├── requirements.txt
 │   └── Dockerfile
+├── index.html             # Live interactive demo + verified real incident
 └── docker-compose.yml
 ```
 
-## Safety Design
+---
 
-The agent is deliberately **not** given a raw shell. `execute_docker_command`
-is an allow-listed tool: only a fixed set of Docker verbs are permitted
-(`restart`, `logs`, `ps`, `stats`, `start`, `stop`, `inspect`), only the one
-pre-approved target container may be referenced, shell metacharacters are
-rejected outright, and every command runs via `subprocess` with `shell=False`
-— never through a shell interpreter. This is what makes the "autonomous"
-part safe enough to demo live: the LLM decides *when* and *which* runbook
-action to take, but it cannot escalate beyond that fixed, auditable toolset.
+## 📸 Live Demo
+
+🌐 **Try it live →** [sre-agent demo](#)
+
+The demo page includes a **Verified Real Test Run** card — real timestamps,
+real captured logs, real agent remediation — plus an interactive simulation
+you can trigger yourself.
 
 ---
 
-*Autonomous SRE Agent: Self-Healing DevOps System — designed, built, and
-documented by Vignesh Yadala.*
+## 👨‍💻 Developer
+
+| Name | Role | GitHub |
+|---|---|---|
+| Vignesh Yadala | Designer & Developer | [@Vigneshyadala](https://github.com/Vigneshyadala) |
+
+🤖 **Autonomous SRE Agent** — All Rights Reserved © Vignesh Yadala 2026
+
+Built with LangChain, ChromaDB, FastAPI & Docker
